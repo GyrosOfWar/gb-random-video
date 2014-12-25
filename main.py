@@ -1,7 +1,12 @@
 from flask import Flask
 from private_data import API_KEY
 from urllib.request import urlopen
+from urllib.parse import urlencode, quote_plus
 import json
+
+def filter_empty(dictionary):
+    return dict((k, v) for k, v in dictionary.items() if v)
+
 
 class GBApi():
     def __init__(self, api_key):
@@ -23,11 +28,28 @@ class GBApi():
         return json.loads(json_string)
 
     def videos(self, **kwargs):
-        # possible query parameters:
-        # id
-        # name
-        pass
+        video_id = kwargs.get('id')
+        name = kwargs.get('name')
+        date = kwargs.get('publish_date')
+        video_type = kwargs.get('video_type')
+        offset = kwargs.get('offset')
+        limit = kwargs.get('limit')
+  
+        if not video_id and not name and not date and not video_type:
+            raise ArgumentError('Missing required argument!')
 
+        filters = filter_empty({'id': video_id, 'name': name, 'publish_date': date, 'video_type': video_type})
+        filter_string = ''
+        # FIXME urlencode is too eager with this stuff here
+        for field, value in filters.items():
+            filter_string += '%s:%s,' % (field, quote_plus(value))
+        print(filter_string)
+
+        args = filter_empty({'offset': offset, 'limit': limit, 'filter': filter_string, 'api_key': self.api_key})
+
+        params = urlencode(args)
+        url = 'http://www.giantbomb.com/api/videos/?%s' % params
+        return url
 
 app = Flask(__name__)
 @app.route('/')
