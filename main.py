@@ -4,6 +4,7 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 import json
 import random
+import os
 
 def filter_empty(dictionary):
     """Removes all key-value pairs where the value is empty."""
@@ -15,16 +16,22 @@ class GBApi():
     def __init__(self, api_key):
         self.api_key = api_key
         self.video_types = {}
+
+        # Get all the video types from the API
         base_url = 'http://www.giantbomb.com/api/video_types/?'
         params = {'format': 'json', 'api_key': self.api_key}
         types_url = base_url + urlencode(params)
         types_data = self.load_into_dict(types_url)
+        # Store the video types in a map that maps the
+        # name (e.g. quick_looks) to the type ID
         for _type in types_data['results']:
             t_name = _type['name'].lower().replace(' ', '_')
             t_id = _type['id']
             self.video_types[t_name] = t_id
 
+        # Stores the number of available videos for each type of video
         self.video_counts = {}
+        # A cache to store the API data in memory.
         self.cache = {}
 
     def load_into_dict(self, url):
@@ -99,15 +106,34 @@ class GBApi():
 
 
 api = GBApi(API_KEY)
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static/')
 
-@app.route('/<category>')
-def hello(category):
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/random_video/<category>')
+def random_video(category):
+    """Returns a random video from a given category"""
     videos = api.all_videos(category)
     idx = random.randint(0, len(videos))
     print(idx)
     url = videos[idx]['site_detail_url']
-    return '<a href="%s">go!</a>' % url
+    return url
+
+@app.route('/categories')
+def return_categories():
+    categories = list(api.video_types.keys())
+    category_map = dict()
+    for i in range(0, len(categories)):
+        c = categories[i]
+        nice_name = c.replace('_', ' ').title()
+        category_map[c] = nice_name
+    return json.dumps(category_map)
+
+@app.route('/static/<file_name>')
+def static_files(file_name):
+    return app.send_static_file(file_name)
 
 
 if __name__ == '__main__':
