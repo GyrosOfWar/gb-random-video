@@ -2,17 +2,20 @@
 <html>
   <head>
     <link rel="stylesheet" href="/static/bootstrap.css">
+    <link rel="stylesheet" href="/static/custom.css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Random GB Video</title>
   </head>
   <body>
     <div class="container" id="container_main">
       <h1>Random Giant Bomb video!</h1>
-      <div class="col-xs-4">
+      <br/>
+      <div class="form-group">
         <div class="form-inline">
-          <!-- The actual values are appended here by the JS -->
-          <select class="form-control" id="video_type"></select>
-          <button class="btn btn-default" id="go_button">Go!</button>
+        <label for="video_type" class="control-label">Category:</label>
+        <!-- The actual values are appended here by the JS -->
+        <select class="form-control" id="video_type"></select>
+        <button class="btn btn-default" id="go_button">Go!</button>
         </div>
       </div>
     </div>

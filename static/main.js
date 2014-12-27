@@ -10,6 +10,7 @@ $('#go_button').click(function() {
     var category = $('#video_type').val();
     $.get('/random_video/' + category)
         .done(function(url) {
+            // Redirect to the video link
             window.location.href = url;
         });
 });
