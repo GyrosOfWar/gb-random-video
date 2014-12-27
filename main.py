@@ -122,7 +122,8 @@ def random_video(category):
     return url
 
 @app.route('/categories')
-def return_categories():
+def categories():
+    """Returns all of the video types."""
     categories = list(api.video_types.keys())
     category_map = dict()
     for i in range(0, len(categories)):
@@ -130,6 +131,7 @@ def return_categories():
         nice_name = c.replace('_', ' ').title()
         category_map[c] = nice_name
     return json.dumps(category_map)
+
 
 @app.route('/static/<file_name>')
 def static_files(file_name):
