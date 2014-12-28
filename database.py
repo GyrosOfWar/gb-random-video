@@ -34,7 +34,7 @@ class DatabaseAdapter(object):
         conn.commit()
         conn.close()
 
-    def all_videos(self, category):
+    def all_video_urls(self, category):
         """Returns all the videos stored in the database for the given
         long category string name."""
         conn = psycopg2.connect(self.connection_string)

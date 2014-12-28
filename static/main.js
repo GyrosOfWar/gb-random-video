@@ -14,3 +14,9 @@ $('#go_button').click(function() {
             window.location.href = url;
         });
 });
+
+$('#bombcast_button').click(function() {
+    $.get('/random_bombcast').done(function(url) {
+        window.location.href = url;
+    });
+});

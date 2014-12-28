@@ -5,13 +5,14 @@ from urllib.parse import urlencode
 import json
 import random
 import os
-from gbapi import GBApi
+from gbapi import GBApi, RssFeed
 from database import DatabaseAdapter
 
 
 api = GBApi(API_KEY)
 app = Flask(__name__, static_url_path='/static/')
 db = DatabaseAdapter('dbname=random_video')
+bombcast_feed = RssFeed('http://www.giantbomb.com/podcast-xml/giant-bombcast/')
 
 @app.route('/')
 def index():
@@ -24,9 +25,16 @@ def random_video(category):
     long_name = api.video_types_names.get(category)
     if not long_name:
         app.logger.error('Got invalid category name from internal API: %s' % category)
-    videos = db.all_videos(long_name)
+    videos = db.all_video_urls(long_name)
     idx = random.randint(0, len(videos))
     return videos[idx]
+
+
+# TODO implement periodical updates for the feed
+@app.route('/random_bombcast')
+def random_bombcast():
+    idx = random.randint(0, len(bombcast_feed.items))
+    return bombcast_feed.items[idx].link
 
 
 @app.route('/categories')
