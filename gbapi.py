@@ -3,6 +3,7 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 import json
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 def filter_empty(dictionary):
     """Removes all key-value pairs where the value is empty."""
@@ -14,6 +15,16 @@ def load_into_dict(url):
     reply = urlopen(url)
     json_string = reply.readall().decode()
     return json.loads(json_string)
+
+def get_error(json_obj):
+    error = json_obj['status_code']
+    if error == 1:
+        return 'OK'
+    else:
+        err_string = json_obj['error']
+        print('Error querying the API:', err_string)
+        return err_string
+
 
 class GBApi(object):
     """A representation of the Giant Bomb API."""
@@ -29,15 +40,18 @@ class GBApi(object):
         # Store the video types in a map that maps the
         # name (e.g. quick_looks) to the type ID
         self.video_types = dict()
+        # Map from original video type names to short names used in
+        # the REST API
+        self.video_types_names = dict()
         for _type in types_data['results']:
-            t_name = _type['name'].lower().replace(' ', '_')
+            long_name = _type['name']
+            short_name = long_name.lower().replace(' ', '_')
             t_id = _type['id']
-            self.video_types[t_name] = t_id
+            self.video_types[short_name] = t_id
+            self.video_types_names[short_name] = long_name
 
         # Stores the number of available videos for each type of video
         self.video_counts = dict()
-        # A cache to store the API data in memory.
-        self.cache = dict()
 
     def videos(self, **kwargs):
         """Represents the /videos/-API endpoint.
@@ -68,9 +82,12 @@ class GBApi(object):
         args = filter_empty({'offset': offset, 'limit': limit, 'format': 'json',
                              'filter': filter_string, 'api_key': self.api_key})
 
-        params = urlencode(args)
-        url = 'http://www.giantbomb.com/api/videos/?%s' % params
+        url = 'http://www.giantbomb.com/api/videos/?%s' % urlencode(args)
         data = load_into_dict(url)
+
+        error = get_error(data)
+        if error != 'OK':
+            raise ValueError('Encountered error querying the API: %s' % error)
 
         count = data['number_of_total_results']
         if category_name:
@@ -80,14 +97,10 @@ class GBApi(object):
 
         return data['results']
 
-    def all_videos(self, category_name='all', refresh=False):
+    def all_videos(self, category_name='all'):
         """Returns all videos from the given category."""
         if category_name not in self.video_types:
             raise ValueError('invalid video type: %s' % category_name)
-
-        # Look up the category in the cache
-        if category_name in self.cache:
-            return self.cache[category_name]
 
         # Try to get the number of videos for the given type
         count = self.video_counts.get(category_name)
@@ -108,7 +121,6 @@ class GBApi(object):
 
             all_results.extend(result)
 
-        self.cache[category_name] = all_results
         return all_results
 
 class RssFeed(object):
@@ -118,11 +130,33 @@ class RssFeed(object):
         self.feed_url = feed_url
         xml = urlopen(feed_url).readall().decode()
         self.root = ET.fromstring(xml)
-
-    def items(self):
-        """Returns an iterator of all the feed items."""
-        return self.root.iter('item')
+        self.items = []
+        for item in self.root.iter('item'):
+            title = item[0].text
+            link = item[1].text
+            description = item[2].text
+            pub_date = parsedate_to_datetime(item[3].text)
+            duration_string = item[9].text
+            duration = None
+            if duration_string:
+                duration = int(duration_string)
+            feed_item = RssFeedItem(title, link, description, pub_date, duration)
+            self.items.append(feed_item)
 
     def item(self, i):
         """Returns the i-th RSS feed item."""
-        return list(self.items())[i]
+        return self.items[i]
+
+    def __str__(self):
+        return str(list(map(lambda i: i.title, self.items)))
+
+class RssFeedItem(object):
+    def __init__(self, title, link, description, pub_date, duration):
+        self.title = title
+        self.link = link
+        self.description = description
+        self.pub_date = pub_date
+        self.duration = duration
+
+    def __str__(self):
+        return self.title
