@@ -33,7 +33,7 @@ def categories():
         c = categories[i]
         nice_name = c.replace('_', ' ').title()
         category_map[c] = nice_name
-        return json.dumps(category_map)
+    return json.dumps(category_map)
 
 
 @app.route('/static/<file_name>')

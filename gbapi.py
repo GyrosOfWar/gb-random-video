@@ -2,13 +2,20 @@
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import json
+import xml.etree.ElementTree as ET
 
 def filter_empty(dictionary):
     """Removes all key-value pairs where the value is empty."""
     return dict((k, v) for k, v in dictionary.items() if v)
 
+def load_into_dict(url):
+    """Loads JSON from the given URL, parses it
+       and stores it in a Python dict."""
+    reply = urlopen(url)
+    json_string = reply.readall().decode()
+    return json.loads(json_string)
 
-class GBApi():
+class GBApi(object):
     """A representation of the Giant Bomb API."""
     def __init__(self, api_key):
         self.api_key = api_key
@@ -18,26 +25,27 @@ class GBApi():
         base_url = 'http://www.giantbomb.com/api/video_types/?'
         params = {'format': 'json', 'api_key': self.api_key}
         types_url = base_url + urlencode(params)
-        types_data = self.load_into_dict(types_url)
+        types_data = load_into_dict(types_url)
         # Store the video types in a map that maps the
         # name (e.g. quick_looks) to the type ID
+        self.video_types = dict()
         for _type in types_data['results']:
             t_name = _type['name'].lower().replace(' ', '_')
             t_id = _type['id']
             self.video_types[t_name] = t_id
 
         # Stores the number of available videos for each type of video
-        self.video_counts = {}
+        self.video_counts = dict()
         # A cache to store the API data in memory.
-        self.cache = {}
-
-    def load_into_dict(self, url):
-        reply = urlopen(url)
-        json_string = reply.readall().decode()
-        return json.loads(json_string)
+        self.cache = dict()
 
     def videos(self, **kwargs):
-        #TODO write docstring
+        """Represents the /videos/-API endpoint.
+        Filter arguments:
+        id: Numerical ID of the video
+        name: Name of the video
+        publish_date: Published date of the video.
+        video_type: Name of the category of the video. (see video_types)"""
         video_id = kwargs.get('id')
         name = kwargs.get('name')
         date = kwargs.get('publish_date')
@@ -62,7 +70,7 @@ class GBApi():
 
         params = urlencode(args)
         url = 'http://www.giantbomb.com/api/videos/?%s' % params
-        data = self.load_into_dict(url)
+        data = load_into_dict(url)
 
         count = data['number_of_total_results']
         if category_name:
@@ -72,31 +80,49 @@ class GBApi():
 
         return data['results']
 
-    def all_videos(self, category_name):
+    def all_videos(self, category_name='all', refresh=False):
         """Returns all videos from the given category."""
-        if category_name and category_name not in self.video_types:
+        if category_name not in self.video_types:
             raise ValueError('invalid video type: %s' % category_name)
-        if not category_name:
-            category_name = 'all'
 
+        # Look up the category in the cache
         if category_name in self.cache:
             return self.cache[category_name]
 
-        count = None
-        cat = self.video_counts.get(category_name)
-        if not cat:
-            self.videos(video_type=category_name)
-            cat = self.video_counts.get(category_name)
-        count = cat
+        # Try to get the number of videos for the given type
+        count = self.video_counts.get(category_name)
+        if not count:
+            # Query the API for the number of videos
+            self.videos(video_type=category_name, limit=1)
+            count = self.video_counts.get(category_name)
 
         all_results = []
+        # Fetch all of the videos from the API.
+        # Each API query can at most retrieve 100 videos,
+        # so increment the offset by 100 each iteration.
         for offset in range(0, count, 100):
-            if category_name:
+            if category_name != 'all':
                 result = self.videos(offset=offset, video_type=category_name)
             else:
                 result = self.videos(offset=offset)
-            print("Fetching page with offset ", offset)
+
             all_results.extend(result)
 
         self.cache[category_name] = all_results
         return all_results
+
+class RssFeed(object):
+    """Represents a RSS feed. Stores the root of the
+       XML tree of the RSS file and the feed's URL."""
+    def __init__(self, feed_url):
+        self.feed_url = feed_url
+        xml = urlopen(feed_url).readall().decode()
+        self.root = ET.fromstring(xml)
+
+    def items(self):
+        """Returns an iterator of all the feed items."""
+        return self.root.iter('item')
+
+    def item(self, i):
+        """Returns the i-th RSS feed item."""
+        return list(self.items())[i]
