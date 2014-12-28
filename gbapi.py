@@ -40,8 +40,6 @@ class GBApi(object):
         # Store the video types in a map that maps the
         # name (e.g. quick_looks) to the type ID
         self.video_types = dict()
-        # Map from original video type names to short names used in
-        # the REST API
         self.video_types_names = dict()
         for _type in types_data['results']:
             long_name = _type['name']
@@ -122,6 +120,10 @@ class GBApi(object):
             all_results.extend(result)
 
         return all_results
+
+    def check_new_videos(self, category):
+        self.videos(video_type=category)
+        # TODO
 
 class RssFeed(object):
     """Represents a RSS feed. Stores the root of the
