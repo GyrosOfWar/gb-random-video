@@ -48,5 +48,15 @@ def static_files(file_name):
     return app.send_static_file(file_name)
 
 
+def refresh_videos():
+    new_videos = api.videos(limit=10)
+    for v in new_videos:
+        if not db.has_video(v['id']):
+            db.insert_video(v)
+
+def refresh_podcast():
+    bombcast_feed = RssFeed('http://www.giantbomb.com/podcast-xml/giant-bombcast/')
+    
+    
 if __name__ == '__main__':
     app.run(debug=True)

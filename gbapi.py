@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 import json
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
+import datetime
 
 def filter_empty(dictionary):
     """Removes all key-value pairs where the value is empty."""
@@ -67,7 +68,7 @@ class GBApi(object):
         video_type = None
         if category_name and category_name not in self.video_types:
             raise ValueError('Provided an invalid category name: %s' % category_name)
-        video_type = self.video_types[category_name]
+        video_type = self.video_types.get(category_name)
         offset = kwargs.get('offset')
         limit = kwargs.get('limit')
 
@@ -120,10 +121,6 @@ class GBApi(object):
             all_results.extend(result)
 
         return all_results
-
-    def check_new_videos(self, category):
-        self.videos(video_type=category)
-        # TODO
 
 class RssFeed(object):
     """Represents a RSS feed. Stores the root of the

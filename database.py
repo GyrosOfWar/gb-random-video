@@ -7,6 +7,8 @@ def first_time_setup():
     conn = psycopg2.connect('dbname=random_video user=postgres')
     cur = conn.cursor()
     cur.execute('CREATE TABLE video (id serial PRIMARY KEY, data json);')
+    # TODO
+    cur.execute('CREATE TABLE podcast (id serial PRIMARY KEY, title varchar, description varchar);')
     api = GBApi(API_KEY)
     for category in api.video_types.keys():
         print("Fetching category %s " % category)
@@ -19,6 +21,7 @@ def first_time_setup():
 
 
 class DatabaseAdapter(object):
+    """A thin abstraction layer to make common database operations for this app easier"""
     def __init__(self, connection_string):
         self.connection_string = connection_string
 
@@ -50,6 +53,24 @@ class DatabaseAdapter(object):
         if not videos:
             print('Was not able to find any videos for category', category)
 
-        conn.commit()
         conn.close()
         return videos
+
+    def has_video(self, video_id):
+        conn = psycopg2.connect(self.connection_string)
+        cur = conn.cursor()
+        has_video = False
+
+        try:
+            cur.execute("""
+            SELECT data->'id'
+            FROM video
+            WHERE (data->>'id')::int = %s;""",
+                        (video_id,))
+            has_video = cur.fetchone() != None
+
+        except psycopg2.Error as err:
+            print('Error querying the database:', err)
+        conn.close()
+
+        return has_video
