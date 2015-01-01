@@ -54,9 +54,11 @@ def refresh_videos():
         if not db.has_video(v['id']):
             db.insert_video(v)
 
-def refresh_podcast():
+def refresh_podcasts():
     bombcast_feed = RssFeed('http://www.giantbomb.com/podcast-xml/giant-bombcast/')
-    
-    
+    for item in bombcast_feed.items:
+        if not db.has_podcast(item.title):
+            db.insert_podcast_item(item)
+
 if __name__ == '__main__':
     app.run(debug=True)

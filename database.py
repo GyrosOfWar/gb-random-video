@@ -1,14 +1,13 @@
 import psycopg2
-from gbapi import GBApi
+from gbapi import GBApi, RssFeed
 from private_data import API_KEY
 from psycopg2.extras import Json
 
-def first_time_setup():
-    conn = psycopg2.connect('dbname=random_video user=postgres')
+def first_time_setup_video():
+    """Sets up the database and adds all the videos from the video API to it."""
+    conn = psycopg2.connect('dbname=random_video')
     cur = conn.cursor()
     cur.execute('CREATE TABLE video (id serial PRIMARY KEY, data json);')
-    # TODO
-    cur.execute('CREATE TABLE podcast (id serial PRIMARY KEY, title varchar, description varchar);')
     api = GBApi(API_KEY)
     for category in api.video_types.keys():
         print("Fetching category %s " % category)
@@ -16,6 +15,28 @@ def first_time_setup():
         print("Inserting videos into DB")
         for video in videos:
             cur.execute('INSERT INTO video (data) VALUES (%s)', (Json(video),))
+
+    conn.commit()
+    conn.close()
+
+def first_time_setup_podcast(feed_url):
+    conn = psycopg2.connect('dbname=random_video')
+    cur = conn.cursor()
+    cur.execute("""CREATE TABLE podcast
+    (id serial PRIMARY KEY,
+    title text, 
+    link text,
+    description text,
+    pub_date date);""")
+
+    feed = RssFeed(feed_url)
+
+    for item in reversed(feed.items):
+        cur.execute("""
+            INSERT INTO podcast (title, link, description, pub_date)
+            VALUES (%s, %s, %s, %s)""",
+                    (item.title, item.link,
+                     item.description, item.pub_date))
     conn.commit()
     conn.close()
 
@@ -32,7 +53,22 @@ class DatabaseAdapter(object):
             cur.execute('INSERT INTO video (data) VALUES (%s)', (Json(json_obj),))
         except psycopg2.Error as err:
             print('Error writing to the database:', err)
-            #app.logger.error('Error writing to the database: %s' % err)
+
+        conn.commit()
+        conn.close()
+
+    def insert_podcast_item(self, feed_item):
+        conn = psycopg2.connect(self.connection_string)
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+            INSERT INTO podcast (title, link, description, pub_date)
+            VALUES (%s, %s, %s, %s)""",
+                        (feed_item.title, feed_item.link,
+                         feed_item.description, feed_item.pub_date))
+        except psycopg2.Error as err:
+            print('Error inserting into the database:', err)
 
         conn.commit()
         conn.close()
@@ -74,3 +110,21 @@ class DatabaseAdapter(object):
         conn.close()
 
         return has_video
+
+    def has_podcast(self, podcast_name):
+        conn = psycopg2.connect(self.connection_string)
+        cur = conn.cursor()
+        has_podcast = False
+        try:
+            cur.execute("""
+            SELECT title 
+            FROM podcast
+            WHERE title = %s""",
+                        (podcast_name,))
+            has_podcast = cur.fetchone() != None
+
+        except psycopg2.Error as err:
+            print('Error querying the database:', err)
+
+        conn.close()
+        return has_podcast
