@@ -59,6 +59,3 @@ def refresh_podcasts():
     for item in bombcast_feed.items:
         if not db.has_podcast(item.title):
             db.insert_podcast_item(item)
-
-if __name__ == '__main__':
-    app.run(debug=True)
