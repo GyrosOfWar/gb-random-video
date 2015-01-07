@@ -52,10 +52,12 @@ def refresh_videos():
     new_videos = api.videos(limit=10)
     for v in new_videos:
         if not db.has_video(v['id']):
+            print('Inserting new video into database:', v)
             db.insert_video(v)
 
 def refresh_podcasts():
     bombcast_feed = RssFeed('http://www.giantbomb.com/podcast-xml/giant-bombcast/')
     for item in bombcast_feed.items:
         if not db.has_podcast(item.title):
+            print('Inserting new podcast into database:', item)
             db.insert_podcast_item(item)
