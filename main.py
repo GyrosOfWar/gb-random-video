@@ -29,8 +29,6 @@ def random_video(category):
     idx = random.randint(0, len(videos))
     return videos[idx]
 
-
-# TODO implement periodical updates for the feed
 @app.route('/random_bombcast')
 def random_bombcast():
     idx = random.randint(0, len(bombcast_feed.items))
@@ -52,7 +50,7 @@ def refresh_videos():
     new_videos = api.videos(limit=10)
     for v in new_videos:
         if not db.has_video(v['id']):
-            print('Inserting new video into database:', v)
+            print('Inserting new video into database:', v['name'])
             db.insert_video(v)
 
 def refresh_podcasts():
