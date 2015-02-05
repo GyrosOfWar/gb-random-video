@@ -92,6 +92,26 @@ class DatabaseAdapter(object):
         conn.close()
         return videos
 
+    def all_videos_by_name(self, name):
+        """Returns all the videos stored in the database that match with their name."""
+        conn = psycopg2.connect(self.connection_string)
+        cur = conn.cursor()
+        videos = None
+        try:
+            name = '%' + name + '%'
+            cur.execute("SELECT data->>'site_detail_url' FROM video WHERE data->>'name' LIKE %s;",
+                        (name,))
+            videos = [v[0] for v in cur.fetchall()]
+        except psycopg2.Error as err:
+            print('Error writing to the database:', err)
+
+        if not videos:
+            print('Was not able to find any videos matching the name', name)
+
+        conn.close()
+        return videos
+
+
     def has_video(self, video_id):
         conn = psycopg2.connect(self.connection_string)
         cur = conn.cursor()

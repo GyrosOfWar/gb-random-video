@@ -42,6 +42,9 @@ class GBApi(object):
         # name (e.g. quick_looks) to the type ID
         self.video_types = dict()
         self.video_types_names = dict()
+        # TODO special case Metal Gear Scanlon videos
+        # since those videos have both Subscriber
+        # and Metal Gear Scanlon as category
         for _type in types_data['results']:
             long_name = _type['name']
             short_name = long_name.lower().replace(' ', '_')

@@ -45,6 +45,9 @@ def categories():
 def static_files(file_name):
     return app.send_static_file(file_name)
 
+@app.route('/random_video_by_name')
+def random_video_by_name():
+    pass
 
 def refresh_videos():
     new_videos = api.videos(limit=10)
