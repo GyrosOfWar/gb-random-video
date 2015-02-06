@@ -26,6 +26,11 @@ def random_video(category):
     long_name = api.video_types_names.get(category)
     if not long_name:
         app.logger.error('Got invalid category name from internal API: %s' % category)
+
+    # Workaround for the MGS category
+    if long_name == "Metal Gear Scanlon":
+        long_name = "Subscriber, Metal Gear Scanlon"
+    
     videos = db.all_video_urls(long_name)
     idx = random.randint(0, len(videos))
     return videos[idx]
@@ -67,4 +72,4 @@ def refresh_podcasts():
             print('Inserting new podcast into database:', item)
             db.insert_podcast_item(item)
 
-app.run(debug=True)
+#app.run(debug=True)
