@@ -4,6 +4,7 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 import json
 import random
+from flask import request
 import os
 from gbapi import GBApi, RssFeed
 from database import DatabaseAdapter
@@ -45,9 +46,12 @@ def categories():
 def static_files(file_name):
     return app.send_static_file(file_name)
 
-@app.route('/random_video_by_name')
+@app.route('/random_video_by_name', methods = ['POST'])
 def random_video_by_name():
-    pass
+    name = request.form['name']
+    urls = db.all_videos_by_name(name)
+    idx = random.randint(0, len(urls))
+    return urls[idx]
 
 def refresh_videos():
     new_videos = api.videos(limit=10)
@@ -62,3 +66,5 @@ def refresh_podcasts():
         if not db.has_podcast(item.title):
             print('Inserting new podcast into database:', item)
             db.insert_podcast_item(item)
+
+app.run(debug=True)

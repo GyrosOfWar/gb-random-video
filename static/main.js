@@ -15,6 +15,16 @@ $('#go_button').click(function() {
         });
 });
 
+$('#go_button_name').click(function() {
+    var name = $('#video_name').val();
+    if (name != '') {
+        $.post('/random_video_by_name', { name: name })
+            .done(function(url) {
+                window.location.href = url;
+            });
+    }
+});
+
 $('#bombcast_button').click(function() {
     $.get('/random_bombcast').done(function(url) {
         window.location.href = url;

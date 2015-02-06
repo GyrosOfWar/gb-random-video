@@ -1,47 +1,58 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="/static/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/custom.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Random GB Video</title>
-  </head>
-  <body>
-    <div class="container" id="container_main">
-      <h1>Random Giant Bomb video!</h1>
-      <br/>
-      <div class="form-group">
-        <div class="form-inline">
-          <label for="video_type" class="control-label">Category:</label>
-          <!-- The actual values are appended here by the JS -->
-          <select class="form-control" id="video_type"></select>
-          <button class="btn btn-default" id="go_button">Go!</button>
-        </div>
-      </div>
-      <form>
-        <div class="form-group">
-          <label for="video_name" class="control-label">Name:</label>
-          <input type="text" id="video_name">
-          <button class="btn btn-default">Go</button>
-        </div>
-      </form>
-      <br/>
-      <h1>Random Giant Bombcast!</h1>
-      <br/>
-      <button class="btn btn-default" id="bombcast_button">
-        Random Bombcast!
-      </button>
-    </div>
-    <script src="/static/jquery-2.1.3.min.js"></script>
-    <script src="/static/main.js"></script>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <head>
+        <link rel="stylesheet" href="/static/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/custom.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Random GB Video</title>
+    </head>
+    <body>
+        <div class="container" id="container_main">
+            <h1>Random Giant Bomb video!</h1>
+            <br/>
 
-      ga('create', 'UA-58310419-1', 'auto');
-      ga('send', 'pageview');
-    </script>
-  </body>
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label for="video_type" class="col-sm-2 control-label">Category:</label>
+                    <div class="col-sm-6">
+                        <select class="form-control" id="video_type"></select>
+                    </div>
+                    <div class="col-sm-2">
+                        <button class="btn btn-default" id="go_button">Go!</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="video_name" class="col-sm-2 control-label">Name:</label>
+                    
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control"
+                               id="video_name" placeholder="e.g. Unprofessional Fridays or Metal Gear Scanlon">
+                    </div>
+
+                    <div class="col-sm-2">
+                        <button class="btn btn-default" id="go_button_name">Go!</button>
+                    </div>
+                </div>
+            </form>
+
+            <br/>
+            <h1>Random Giant Bombcast!</h1>
+            <br/>
+            <button class="btn btn-default" id="bombcast_button">
+                Random Bombcast!
+            </button>
+        </div>
+        <script src="/static/jquery-2.1.3.min.js"></script>
+        <script src="/static/main.js"></script>
+        <script>
+         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+             (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                                  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+         ga('create', 'UA-58310419-1', 'auto');
+         ga('send', 'pageview');
+        </script>
+    </body>
 </html>
